@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id           Int           @id(map: "Users_pkey") @default(autoincrement())
+  email        String        @unique(map: "Users_email_key")
+  name         String
+  password     String?
+  mobile       String?       @unique(map: "Users_mobile_key")
+  token        String?
+  created_at   DateTime      @default(now())
+  is_visitor   Boolean       @default(true)
+  is_player    Boolean       @default(false)
+  is_manager   Boolean       @default(false)
+  is_organizer Boolean       @default(false)
+  is_admin     Boolean       @default(false)
+  is_verified  Boolean       @default(false)
+  is_google    Boolean       @default(false)
+  players      players[]
+  teams        teams[]
+  tournaments  tournaments[]
+}
+
+model players {
+  id                Int                 @id(map: "Players_pkey") @default(autoincrement())
+  photo             String?
+  first_name        String
+  middle_name       String
+  last_name         String
+  alternate_mobile  String
+  gender            String
+  height            Float
+  weight            Int
+  pincode           String
+  playing_position  String
+  jersey_no         Int
+  about             String
+  user_id           Int
+  created_at        DateTime            @default(now())
+  date_of_birth     DateTime            @db.Date
+  mobile            String
+  match_players     match_players[]
+  match_score       match_score[]
+  player_statistics player_statistics[]
+  users             users               @relation(fields: [user_id], references: [id], map: "Players_user_id_fkey")
+  team_players      team_players[]
+  teams             teams[]
+}
+
+model player_statistics {
+  id             Int      @id(map: "Player_statistics_pkey") @default(autoincrement())
+  matches_played Int      @default(0)
+  matches_won    Int      @default(0)
+  matches_lost   Int      @default(0)
+  points         Int      @default(0)
+  player_id      Int
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  players        players  @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_table")
+}
+
+model teams {
+  id                  Int                @id(map: "Teams_pkey") @default(autoincrement())
+  logo                String?
+  team_name           String
+  coach_name          String?
+  coach_mobile        String?
+  asst_coach_name     String?
+  asst_coach_mobile   String?
+  about_team          String?
+  matches_played      Int                @default(0)
+  matches_won         Int                @default(0)
+  matches_lost        Int                @default(0)
+  is_details_editable Boolean?           @default(true)
+  user_id             Int
+  created_at          DateTime?          @default(now()) @db.Time(6)
+  captain_id          Int
+  match_players       match_players[]
+  match_quarters      match_quarters[]
+  match_score         match_score[]
+  team_1_matches      matches[]          @relation("matches_team_1_idToteams")
+  team_2_matches      matches[]          @relation("matches_team_2_idToteams")
+  match_won_by        matches[]          @relation("matches_won_by_team_idToteams")
+  team_players        team_players[]
+  captain             players            @relation(fields: [captain_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_table")
+  users               users              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_table")
+  tournament_teams    tournament_teams[]
+}
+
+model team_players {
+  id               Int      @id(map: "Team_players_pkey") @default(autoincrement())
+  team_id          Int
+  player_id        Int
+  playing_position String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  players          players  @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "player_table")
+  teams            teams    @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_table")
+}
+
+model tournaments {
+  id                   Int                   @id @default(autoincrement())
+  logo                 String?
+  tournament_name      String
+  address              String
+  start_date           DateTime              @db.Date
+  end_date             DateTime              @db.Date
+  gender_types         String[]
+  age_categories       String[]
+  level                String
+  status               Int                   @default(0)
+  is_approved          Boolean               @default(false)
+  winner_prize         String?
+  runner_prize         String?
+  is_registration_open Boolean               @default(false)
+  is_details_editable  Boolean               @default(true)
+  user_id              Int
+  created_at           DateTime              @default(now()) @db.Timestamp(6)
+  about                String?
+  gallery              gallery[]
+  matches              matches[]
+  tournament_referees  tournament_referees[]
+  tournament_sponsors  tournament_sponsors[]
+  tournament_teams     tournament_teams[]
+  users                users                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_table")
+}
+
+model tournament_referees {
+  id            Int         @id @default(autoincrement())
+  name          String
+  mobile        String
+  type          String
+  tournament_id Int
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  tournaments   tournaments @relation(fields: [tournament_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "player_table")
+}
+
+model tournament_sponsors {
+  id            Int         @id @default(autoincrement())
+  tournament_id Int
+  logo          String
+  title         String
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  tournaments   tournaments @relation(fields: [tournament_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_table")
+}
+
+model tournament_teams {
+  id                        Int                         @id @default(autoincrement())
+  age_categories            String[]
+  is_selected               Int                         @default(2)
+  reject_reason             String?
+  tournament_id             Int
+  team_id                   Int
+  created_at                DateTime                    @default(now()) @db.Timestamp(6)
+  gender_type               String[]
+  teams                     teams                       @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_table")
+  tournaments               tournaments                 @relation(fields: [tournament_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_table")
+  tournament_teams_reg_type tournament_teams_reg_type[]
+}
+
+model tournament_teams_reg_type {
+  id                    Int              @id  @default(autoincrement())
+  tournament_team_id    Int
+  age_category          String
+  gender_type           String
+  pool_name             String?
+  points                Int              @default(0)
+  is_disqualified       Boolean          @default(false)
+  is_knockout_upperhalf Boolean?
+  created_at            DateTime?        @default(now()) @db.Timestamp(6)
+  tournament_teams      tournament_teams @relation(fields: [tournament_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_teams_reg_type")
+}
+
+model matches {
+  id             Int              @id @default(autoincrement())
+  tournament_id  Int
+  team_1_id      Int
+  team_2_id      Int
+  scorekeeper_id Int?
+  address        String?
+  status         Int              @default(1)
+  cancel_reason  String?
+  round_name     String?
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  won_by_team_id Int?
+  quarters_held  Int              @default(0)
+  start_date     DateTime?        @db.Date
+  start_time     String?
+  match_players  match_players[]
+  match_quarters match_quarters[]
+  scorekeeper    scorekeeper?     @relation(fields: [scorekeeper_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scorekeeper_table")
+  team_1         teams            @relation("matches_team_1_idToteams", fields: [team_1_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_1_table")
+  team_2         teams            @relation("matches_team_2_idToteams", fields: [team_2_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_2_table")
+  tournaments    tournaments      @relation(fields: [tournament_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_table")
+  won_by_team    teams?           @relation("matches_won_by_team_idToteams", fields: [won_by_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "won_team")
+}
+
+model scorekeeper {
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String
+  mobile            String
+  token             String?
+  token_expiry_time DateTime? @db.Timestamp(6)
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+  matches           matches[]
+}
+
+model match_players {
+  id         Int      @id @default(autoincrement())
+  match_id   Int
+  player_id  Int
+  points     Int      @default(0)
+  fouls      Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  team_id    Int
+  is_captain Boolean  @default(false)
+  matches    matches  @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "maches_table")
+  players    players  @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_table")
+  teams      teams    @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "teams_table")
+}
+
+model match_quarters {
+  id                      Int           @id @default(autoincrement())
+  match_id                Int
+  team_1_points           Int           @default(0)
+  team_2_points           Int           @default(0)
+  team_1_fouls            Int           @default(0)
+  team_2_fouls            Int           @default(0)
+  quarter_number          Int?
+  won_by_team_id          Int?
+  status                  Int           @default(2)
+  timeline_start_score_id Int?
+  timeline_end_score_id   Int?
+  created_at              DateTime      @default(now()) @db.Timestamp(6)
+  is_undo_score           Boolean       @default(false)
+  matches                 matches       @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "match_table")
+  teams                   teams?        @relation(fields: [won_by_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_table")
+  score                   match_score[] @relation("match_score_quarter_idTomatch_quarters")
+}
+
+model match_score {
+  id           Int            @id @default(autoincrement())
+  team_id      Int
+  points       Int
+  point_status String
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  player_id    Int
+  quarter_id   Int
+  quarter      match_quarters @relation("match_score_quarter_idTomatch_quarters", fields: [quarter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "match_quarter_table")
+  players      players        @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_table")
+  teams        teams          @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "team_table")
+}
+
+model gallery {
+  id            Int          @id @default(autoincrement())
+  tournament_id Int?
+  photo         String
+  category      String
+  priority      Int          @default(0)
+  created_at    DateTime     @default(now()) @db.Timestamp(6)
+  tournaments   tournaments? @relation(fields: [tournament_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tournament_table")
+}
+
+model news {
+  id          Int      @id @default(autoincrement())
+  photo       String
+  title       String
+  description String
+  tags        String
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+}
