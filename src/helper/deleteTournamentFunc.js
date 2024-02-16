@@ -97,7 +97,7 @@ const deleteTournamentFunc = async(tournament_id) =>{
   })
 
   if(!any_tournament) { //updating user table
-    await prisma.user.update({
+    await prisma.users.update({
       where:{
         id: tournament_details.user_id
       },
