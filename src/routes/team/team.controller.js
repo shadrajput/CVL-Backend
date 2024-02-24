@@ -106,7 +106,7 @@ async function httpGetAllTeams(req, res, next) {
   }
 }
 
-async function httpPostTournament(req, res) {
+async function httpPostTournament(req, res, next) {
   const data = req.body;
 
   try {

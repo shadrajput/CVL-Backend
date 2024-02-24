@@ -5,7 +5,7 @@ const pool = new Pool({
   password: process.env.POSTGRE_PASSWORD,
   host: 'localhost',
   post: 5432,
-  database: 'cbl'
+  database: 'cvl'
 })
 async function startDatabase(){
   pool.connect(async(err)=>{

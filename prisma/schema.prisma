@@ -215,7 +215,6 @@ model match_players {
   match_id   Int
   player_id  Int
   points     Int      @default(0)
-  fouls      Int      @default(0)
   created_at DateTime @default(now()) @db.Timestamp(6)
   team_id    Int
   is_captain Boolean  @default(false)
@@ -229,8 +228,6 @@ model match_quarters {
   match_id                Int
   team_1_points           Int           @default(0)
   team_2_points           Int           @default(0)
-  team_1_fouls            Int           @default(0)
-  team_2_fouls            Int           @default(0)
   quarter_number          Int?
   won_by_team_id          Int?
   status                  Int           @default(2)

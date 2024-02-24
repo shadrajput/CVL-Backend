@@ -70,17 +70,7 @@ const addScore = catchAsyncErrors(async(req, res, next) =>{
     const player_id = Number(req.body.player_id);
     const point_type = req.body.point_type
 
-    let points = 0;
-
-    if(point_type == 'free shot'){
-        points = 1
-    }
-    else if(point_type == 'in 3 point'){
-        points = 2
-    }
-    else{
-        points = 3
-    }
+    let points = 1;
 
     const quarter_details = await prisma.match_quarters.findFirst({ 
         where:{ match_id, status: 2 },
@@ -202,84 +192,9 @@ const addScore = catchAsyncErrors(async(req, res, next) =>{
         }
     })
 
-    res.status(200).json({success: true, message: `${points} points added to ${pointScoreByTeam}`});
+    res.status(200).json({ success: true, message: `${point_type.split('_')[0]} ${point_type.split('_')[1] ? point_type.split('_')[1] : ''} point added to ${pointScoreByTeam}`});
 })
 
-const teamFoul = catchAsyncErrors( async (req, res, next)=>{
-    const match_id = Number(req.params.match_id)
-    const team_id = Number(req.body.team_id)
-    let foulScoreByTeam = '';
-
-    const match_details = await prisma.matches.findUnique({ 
-        where: { id: match_id },
-        include: {
-            team_1: true,
-            team_2: true
-        } 
-    });
-
-    const match_quarter_details = await prisma.match_quarters.findFirst({ 
-        where: { match_id, status: 2 },
-    })
-
-    if(match_details.team_1_id == team_id){ //If team 1 foul
-        foulScoreByTeam = match_details.team_1.team_name
-        await prisma.match_quarters.update({
-            where: {
-                id: match_quarter_details.id
-            },
-            data:{
-                team_1_fouls:{
-                    increment: 1
-                }
-            }
-        })
-    }
-    else{ //If team 2 foul
-        foulScoreByTeam = match_details.team_2.team_name
-        await prisma.match_quarters.update({
-            where: {
-                id: match_quarter_details.id
-            },
-            data:{
-                team_2_fouls:{
-                    increment: 1
-                }
-            }
-        })
-    }
-
-    res.status(200).json({success: true, message: `Foul added to ${foulScoreByTeam}`});
-})
-
-const playerFoul = catchAsyncErrors( async (req, res, next)=>{
-    const match_id = Number(req.params.match_id)
-    const player_id = Number(req.body.player_id)
-
-    const match_player_details = await prisma.match_players.findFirst({
-        where:{
-            match_id,
-            player_id
-        },
-        include:{
-            players: true
-        }
-    })
-
-    await prisma.match_players.update({
-        where:{
-            id: match_player_details.id
-        },
-        data:{
-            fouls:{
-                increment: 1
-            }
-        }
-    })
-
-    res.status(200).json({success: true, message: `Foul added to ${match_player_details.player_id.first_name}`});
-
-})
 
 const changeQuarter = catchAsyncErrors( async (req, res, next)=>{
     const match_id = Number(req.params.match_id);
@@ -769,8 +684,6 @@ const endMatch = catchAsyncErrors( async (req, res, next)=>{
 module.exports = {
     startMatch,
     addScore,
-    teamFoul,
-    playerFoul,
     changeQuarter,
     undoScore,
     endMatch,
