@@ -24,7 +24,8 @@ const {
   requalifyTeam,
   isAuthenticOrganizer,
   createPools,
-  matchFormation,
+  matchFormationAuto,
+  matchFormationManual
 } = require("./tournament.controller");
 const router = express.Router();
 
@@ -128,10 +129,17 @@ router.put(
   createPools
 );
 router.put(
-  "/match-formation/:tournament_id",
+  "/match-formation-auto/:tournament_id",
   isAuthenticatedUser,
   isAuthTournamentOrganizer,
-  matchFormation
+  matchFormationAuto
+);
+
+router.put(
+  "/match-formation-manual/:tournament_id",
+  isAuthenticatedUser,
+  isAuthTournamentOrganizer,
+  matchFormationManual
 );
 
 module.exports = router;
