@@ -11,7 +11,7 @@ const registrationMail = async ({ name, email, link }) => {
       <div style="font-family: sans-serif; width: 100%; background-color: #f3f9ff; padding: 5rem 0">
         <div style="max-width: 100%; background-color: white; margin: 0 auto">
           <div style="width: 100%; background-color:black; padding: 20px 0">
-            <a href="https://thecvl.in" >
+            <a href=${process.env.DOMAIN} >
               <img
                 src="https://ik.imagekit.io/uz4hsgydu/Default/logo.png?updatedAt=1681908076921"
                 style="width: 100%; height: 70px; object-fit: contain"
