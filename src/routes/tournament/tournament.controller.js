@@ -1188,6 +1188,15 @@ const matchFormationManual = catchAsyncErrors(async (req, res, next) => {
   const tournament_id = Number(req.body.tournament_id);
   const {round_name, matches} = req.body;
 
+  const tournament_details = await prisma.tournaments.findUnique({
+    where: { id: tournament_id },
+  });
+
+  //checking if the registration is open
+  if (tournament_details.is_registration_open) {
+    return next(new ErrorHandler("Please close the registration", 400));
+  }
+
   for(let i = 0; i < matches.length; i++) {
     const match_data = await prisma.matches.create({
       data: {
