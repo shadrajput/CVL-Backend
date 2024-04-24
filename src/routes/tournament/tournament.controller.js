@@ -409,14 +409,15 @@ const tournamentSchedule = catchAsyncErrors(async (req, res, next) => {
 });
 
 const uploadGalleryImage = catchAsyncErrors(async (req, res, next) => {
-    const {tournament_id} = req.params;
+  const {tournament_id} = req.params;
 
-    const form = new formidable.IncomingForm();
-    form.parse(req, async function (err, fields, files) {
-      if (err) {
-          return res.status(500).json({ success: false, message: err.message });
-      }
-
+  const form = new formidable.IncomingForm();
+  form.parse(req, async function (err, fields, files) {
+    if (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    
+    try{
       let photo = "";
       photo = await uploadImage(files.image, 'gallery');
       await prisma.gallery.create({
@@ -432,7 +433,11 @@ const uploadGalleryImage = catchAsyncErrors(async (req, res, next) => {
         message: "Gallery image uploaded successfully"
       })
 
-    });
+    } catch (error) {
+      next(error);
+    }
+
+  });
 })
 
 const deleteGalleryImage = catchAsyncErrors(async (req, res, next) => {
@@ -722,7 +727,7 @@ const createPools = catchAsyncErrors(async (req, res, next) => {
     .json({ success: true, message: "Pools created successfully" });
 });
 
-const matchFormation = catchAsyncErrors(async (req, res, next) => {
+const matchFormationAuto = catchAsyncErrors(async (req, res, next) => {
   const tournament_id = Number(req.params.tournament_id);
   const round_name = req.body.round_name;
   const formation_method = req.body.formation_method;
@@ -1178,6 +1183,49 @@ const matchFormation = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
+const matchFormationManual = catchAsyncErrors(async (req, res, next) => {
+
+  const tournament_id = Number(req.body.tournament_id);
+  const {round_name, matches} = req.body;
+
+  for(let i = 0; i < matches.length; i++) {
+    const match_data = await prisma.matches.create({
+      data: {
+        tournament_id,
+        team_1_id: Number(matches[i].team_1),
+        team_2_id: Number(matches[i].team_2),
+        address: matches[i].address,
+        start_date: new Date(matches[i].start_date),
+        start_time: matches[i].start_time,
+        round_name,
+      },
+    });
+
+    const team1Details = await prisma.teams.findFirst({
+      where:{
+        id: Number(matches[i].team_1)
+      }
+    })
+
+    const team2Details = await prisma.teams.findFirst({
+      where:{
+        id: Number(matches[i].team_2)
+      }
+    })
+  
+    //Adding match players of team 1
+    await addMatchPlayers({ match_id: match_data.id, team_id: Number(matches[i].team_1), team_captain_id: team1Details.captain_id })
+
+    //Adding match players of team 2
+    await addMatchPlayers({ match_id: match_data.id, team_id: Number(matches[i].team_2), team_captain_id: team2Details.captain_id })
+  }
+
+
+  
+
+  res.status(200).json({ success: true, message: "Matches formed successfully" });
+})
+
 //Helper functions
 async function addMatchPlayers({ match_id, team_id, team_captain_id }) {
   const players = await prisma.team_players.findMany({
@@ -1249,5 +1297,6 @@ module.exports = {
   requalifyTeam,
   isAuthenticOrganizer,
   createPools,
-  matchFormation,
+  matchFormationAuto,
+  matchFormationManual
 };

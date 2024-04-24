@@ -123,7 +123,39 @@ const matchScore = catchAsyncErrors(async (req, res, next) => {
         team_2_total_won += 1;
       }
     }
+
   }
+
+  const totalPointsByStatusForMatch = await prisma.match_score.groupBy({
+    by: ['team_id', 'point_status'],
+    where: {
+      teams: { id: { in: [match_details.team_1_id, match_details.team_2_id] } }, 
+      quarter: { match_id: match_id }
+    },
+    _sum: {
+      points: true
+    }
+  });
+
+
+  const score_classification = {};
+
+  totalPointsByStatusForMatch.forEach(entry => {
+    const { point_status, team_id, _sum: { points } } = entry;
+    
+    if (!score_classification[`team_${team_id == match_details.team_1_id ? 1 : 2}`]) {
+      score_classification[`team_${team_id == match_details.team_1_id ? 1 : 2}`] = {
+        attack: 0,
+        defence: 0,
+        opponent_error: 0,
+        service_foul: 0,
+        other: 0
+      };
+    }
+
+    score_classification[`team_${team_id == match_details.team_1_id ? 1 : 2}`][point_status.replace(" ", "_")] = points;
+  });
+
 
   res.status(200).json({
     success: true,
@@ -137,6 +169,7 @@ const matchScore = catchAsyncErrors(async (req, res, next) => {
       team_2_total_won,
       team_1_players,
       team_2_players,
+      score_classification
     },
   });
 });

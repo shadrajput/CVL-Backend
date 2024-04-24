@@ -106,7 +106,7 @@ async function httpGetAllTeams(req, res, next) {
   }
 }
 
-async function httpPostTournament(req, res) {
+async function httpPostTournament(req, res, next) {
   const data = req.body;
 
   try {
@@ -127,8 +127,8 @@ async function httpPostTournament(req, res) {
     }
     const result = await prisma.tournament_teams.create({
       data: {
-        age_categories: data.age_cutoff,
-        gender_type: data.tournament_category,
+        age_categories: data.age_cutoff[0],
+        gender_type: data.tournament_category[0],
         tournament_id: data.tournament_id,
         team_id: data.team_id,
       },
