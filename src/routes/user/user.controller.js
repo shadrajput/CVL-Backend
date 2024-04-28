@@ -257,7 +257,7 @@ const updateUserProfile = catchAsyncErrors(async(req, res, next) => {
     const {full_name, phone, password} = req.body
 
     let hashedPassword = null
-    if(password != 'Wellbenix'){
+    if (password != 'Wellbenix2024'){
         hashedPassword = await bcrypt.hash(password.trim(), 10)
     }
     
