@@ -122,47 +122,49 @@ const addScore = catchAsyncErrors(async(req, res, next) =>{
         })
     }
 
-    //Adding player points in match_players table
-    const match_player = await prisma.match_players.findFirst({ 
-        where: {
-            match_id, 
-            player_id
-        } 
-    })
-    await prisma.match_players.update({
-        where:{
-            id: match_player.id
-        },
-        data:{
-            points: {
-                increment: points
+    if (player_id != 0 && player_id != -1){
+        //Adding player points in match_players table
+        const match_player = await prisma.match_players.findFirst({ 
+            where: {
+                match_id, 
+                player_id
+            } 
+        })
+        await prisma.match_players.update({
+            where:{
+                id: match_player.id
+            },
+            data:{
+                points: {
+                    increment: points
+                }
             }
-        }
-    })
-
-    //Adding player points in player table according to the tournament level (international, national, state, local, friendly)
-    const tournament_details = await prisma.tournaments.findUnique({ where: { id: match_details.tournament_id } });
-
-    const player_points =  getPlayerRankingPoints(tournament_details.level);
-
-    const player_stats = await prisma.player_statistics.findFirst({ where:{ player_id } })
-
-    await prisma.player_statistics.update({
-        where: {
-            id: player_stats.id
-        },
-        data:{
-            points:{
-                increment: player_points
+        })
+        
+        //Adding player points in player table according to the tournament level (international, national, state, local, friendly)
+        const tournament_details = await prisma.tournaments.findUnique({ where: { id: match_details.tournament_id } });
+    
+        const player_points =  getPlayerRankingPoints(tournament_details.level);
+    
+        const player_stats = await prisma.player_statistics.findFirst({ where:{ player_id } })
+    
+        await prisma.player_statistics.update({
+            where: {
+                id: player_stats.id
+            },
+            data:{
+                points:{
+                    increment: player_points
+                }
             }
-        }
-    })
+        })
+    }
 
     //Adding new entry in match_score table
     const match_score_details = await prisma.match_score.create({
         data:{
             team_id,
-            player_id,
+            player_id: player_id == 0 || player_id == -1 ? null : player_id,
             points,
             point_status: point_type,
             quarter_id: quarter_details.id

@@ -138,7 +138,22 @@ const matchScore = catchAsyncErrors(async (req, res, next) => {
   });
 
 
-  const score_classification = {};
+  const score_classification = {
+    team_1:{
+      attack: 0,
+      defence: 0,
+      opponent_error: 0,
+      other: 0,
+      service_foul: 0
+    },
+    team_2: {
+      attack: 0,
+      defence: 0,
+      opponent_error: 0,
+      other: 0,
+      service_foul: 0
+    }
+  };
 
   totalPointsByStatusForMatch.forEach(entry => {
     const { point_status, team_id, _sum: { points } } = entry;
